@@ -27,10 +27,7 @@ func (h playbackAccessLog) Handle(ctx context.Context, record slog.Record) error
 		if err != nil {
 			return false
 		}
-		switch path {
-		case "/api/v1/play/entry", "/api/v1/play/resolve", "/api/v1/play/resolve-batch":
-			private = true
-		}
+		private = bodyExcludedFromAccessLog(path)
 		return false
 	})
 	if !private {
@@ -44,6 +41,17 @@ func (h playbackAccessLog) Handle(ctx context.Context, record slog.Record) error
 		return true
 	})
 	return h.Handler.Handle(ctx, filtered)
+}
+
+// bodyExcludedFromAccessLog 列出正文可能含凭据的路径：播放授权、观众登录与启动（平台授权码、VisitorToken）、
+// 全部管理接口（管理员密码、JWT、BytePlus 密钥、TikTok 密钥）和平台回调（验签材料）。这些路径只记录关联字段。
+func bodyExcludedFromAccessLog(path string) bool {
+	switch path {
+	case "/api/v1/play/entry", "/api/v1/play/resolve", "/api/v1/play/resolve-batch",
+		"/api/v1/session", "/api/v1/bootstrap":
+		return true
+	}
+	return strings.HasPrefix(path, "/admin/") || strings.HasPrefix(path, "/callbacks/")
 }
 
 // WithAttrs 保留底层结构化字段和播放脱敏规则。

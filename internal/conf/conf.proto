@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package drama.conf;
+
+option go_package = "drama-server/internal/conf;config";
+
+import "api/config/v1/data.proto";
+import "api/config/v1/otel.proto";
+import "api/config/v1/registry.proto";
+import "api/config/v1/server.proto";
+
+// Bootstrap 定义服务启动所需的顶层分层配置。
+message Bootstrap {
+  // 保存服务身份、版本和运行环境信息。
+  styx.config.v1.AppInfo app = 1;
+  // 保存公开服务配置。
+  Server server = 2;
+  // 保存共享数据库配置。
+  Data data = 3;
+  // 保存可选的服务注册中心配置。
+  styx.config.v1.NacosConfig registry = 4;
+  // 保存日志、追踪和指标导出配置。
+  styx.config.v1.OTelConfig otel = 5;
+  // 保存短剧产品专属业务配置。
+  Business business = 6;
+}
+
+// Server 定义公开网络服务配置。
+message Server {
+  // 保存公开网络服务的监听与超时配置。
+  styx.config.v1.HTTPServerConfig http = 1;
+}
+
+// Data 定义共享持久化后端配置。
+message Data {
+  // 保存所有实例共同使用的 MySQL 主库连接配置；不得为空。
+  styx.config.v1.MySQLConfig mysql = 1;
+  // 保存可重建缓存的 Redis 连接参数。
+  styx.config.v1.RedisConfig redis = 2;
+  // 保存运营统计独立连接池配置；master 必填，地址、凭据及连接池参数均独立维护。
+  styx.config.v1.MySQLConfig reporting_mysql = 3;
+}
+
+// Business 定义不属于单个应用的短剧服务部署参数。
+message Business {
+  // 保存消费者 VisitorToken 加密根密钥，不参与管理员 JWT 签名。
+  string identity_token_encryption_secret = 1;
+  // media 存储于 MySQL 全局配置，Redis 仅缓存，不从启动文件加载。
+  reserved 2;
+  reserved "media";
+  // 保存管理员 JWT 独立签名密钥，至少 32 字节，各 API 实例须一致。
+  string admin_jwt_signing_secret = 3;
+  // 旧版 Sonyflake 机器号已经移除，字段号和名称保留以禁止误用。
+  reserved 4;
+  reserved "sonyflake_machine_id";
+  // 保存历史应用 secret_ref 对应的 TikTok Client Secret，不再从环境变量读取。
+  map<string, string> legacy_tiktok_client_secrets = 5;
+  // 迁移期直连开关与职责筛选已移除，字段号和名称禁止复用。
+  reserved 6, 7;
+  reserved "direct_playback_enabled", "worker_roles";
+  // 直连播放 Token 的有效期（秒），必须为 60～900；修改后重启实例生效。
+  int32 direct_playback_token_ttl_seconds = 8;
+  // 消费者 VisitorToken 的绝对有效期（秒），必须为正数；仅影响重启后新签发的凭据。
+  int32 visitor_token_ttl_seconds = 9;
+  // 单实例内每应用、每用户每分钟的广告错误日志请求上限，必须为 1～60。
+  int32 ad_error_requests_per_minute = 10;
+}

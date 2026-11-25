@@ -1,0 +1,16 @@
+.DS_Store
+.env
+.env.*
+bin/
+go.work
+go.work.sum
+.data/
+coverage/
+var/
+/logs/
+*.log
+.idea/
+.playwright-cli/
+.factory/*
+!.factory/project.yaml
+/server

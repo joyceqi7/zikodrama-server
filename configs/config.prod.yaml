@@ -1,0 +1,115 @@
+app:
+  # 服务名称，对应遥测资源的 service.name。
+  name: drama-server
+  # 测试构建的版本标签。
+  version: "1.0"
+  # 运行环境；media 可从全局配置表加载，test 不启用生产级身份密钥门禁。
+  env: production
+
+# HTTP 服务监听配置，由 Styx 服务工厂消费。
+server:
+  # 消费者 API、管理 API 与回调入口共用的 HTTP 服务。
+  http:
+    # 监听端口 18080；省略主机地址表示监听本机所有网络接口。
+    addr: ":18080"
+    # HTTP 请求处理超时；不决定异步媒资任务的处理时限。
+    timeout: 60s
+
+# 共享持久化配置；运行服务仍需可连接的 MySQL，不回退到内存仓储。
+data:
+  # 测试 ECS 的 MySQL 公网地址。
+  # 仅供 Mac 本机调试测试环境使用。
+  mysql:
+    # 保留项目库名；服务器目前尚未创建 drama_test，启动前需单独部署 Schema。
+    # MySQL 使用 TLS 加密，测试环境暂不验证自签名证书；不得用于生产。
+    master: "user:pass@tcp(ip:port)/drama_test?parseTime=true&loc=UTC&tls=skip-verify"
+    max_open_conns: 100
+    max_idle_conns: 40
+    conn_max_lifetime: 1800s
+    conn_max_idle_time: 600s
+    slow_threshold: 0.2s
+    log_level: warn
+  # 运营统计独立维护连接地址与凭据；master 必填，并访问业务数据所在的同一逻辑库。
+  # 仪表盘汇总刷新需要写权限；该池不用于 Mini 登录、播放、奖励或埋点写入。
+  reporting_mysql:
+    master: "user:pass@tcp(ip:port)/drama_test?parseTime=true&loc=UTC&tls=skip-verify"
+    max_open_conns: 10
+    max_idle_conns: 5
+    conn_max_lifetime: 1800s
+    conn_max_idle_time: 600s
+    slow_threshold: 0.2s
+    log_level: warn
+  # 测试 ECS 的 Redis 公网地址；使用密码认证，当前未配置 TLS。
+  # 全局配置的权威存储，部署需开启持久化并禁止淘汰配置。
+  redis:
+    mode: standalone
+    addrs:
+      - "ip:port"
+    username: default
+    password: "pass"
+    db: 0
+    pool_size: 100
+    min_idle_conns: 30
+    max_idle_conns: 100
+    max_active_conns: 100
+    dial_timeout: 1s
+    read_timeout: 1s
+    write_timeout: 1s
+    slow_threshold: 0.1s
+    disable_identity: true
+
+
+# 产品业务配置，由业务配置投影和对应领域入口校验。
+business:
+  # 消费者 VisitorToken 有效期为 24 小时；重启后仅对新签发凭据生效。
+  visitor_token_ttl_seconds: 86400
+  # 广告日志按单实例、应用和用户限流，不影响统计计数。
+  ad_error_requests_per_minute: 6
+  # 直连播放 Token 有效期，60～900 秒；修改后重启服务生效。
+  direct_playback_token_ttl_seconds: 300
+  # 消费者 VisitorToken 加密根密钥，仅用于消费者认证。
+  identity_token_encryption_secret: ""
+  # 管理员 JWT 独立签名密钥；部署时替换为随机值，禁止复用消费者密钥。
+  admin_jwt_signing_secret: ""
+  # BytePlus VOD 配置存入 MySQL global_configs 的 media 记录；Redis 只做缓存。
+
+# OpenTelemetry 配置；本文件关闭远程导出，保留本地控制台日志。
+otel:
+  # Collector 接收端地址；当前不启用任何远程导出，因此留空。
+  endpoint: ""
+  # 远程导出协议，可选 grpc 或 http；仅在启用导出时使用。
+  protocol: grpc
+  # 远程导出连接是否禁用 TLS；true 表示明文连接，不影响业务 HTTP 的监听配置。
+  insecure: true
+  # 遥测导出请求超时，不是业务 HTTP 或 VOD 处理超时。
+  timeout: 3s
+  # 链路追踪及采样策略。
+  trace:
+    # 启用本地 Trace ID；endpoint 为空时只关联日志，不记录或远程导出 Span。
+    enabled: true
+    # 配置 Collector 后启用远程导出时才使用以下采样策略。
+    sampler: parentbased_traceidratio
+    # 比例采样率，范围 0 至 1；本地模式不采样，仅生成关联标识。
+    sample_rate: 1
+  # 指标导出配置。
+  metric:
+    # 关闭指标远程导出。
+    enabled: false
+  # 日志远程导出与控制台输出分别配置。
+  log:
+    # 仅关闭 OTel 日志远程导出，不关闭下方控制台日志。
+    enabled: false
+    # 最低日志级别；info 保留 info、warn 和 error，过滤 debug。
+    level: info
+    # 将日志输出到本地控制台，便于测试时诊断失败。
+    console: true
+    # 相对目录以进程工作目录为基准；部署时挂载仓库 logs 目录，按 UTC 小时切割。
+    file:
+      directory: ./logs
+      prefix: drama-server
+      rotation: hour
+      retention_days: 3
+  # 遥测导出器的重试配置，不控制业务重试或 Worker 任务重试。
+  retry:
+    # 关闭遥测导出重试；当前所有远程导出也均已关闭。
+    enabled: false

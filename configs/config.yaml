@@ -1,0 +1,76 @@
+app:
+  name: drama-server
+  version: dev
+  env: development
+
+server:
+  http:
+    addr: ":8080"
+    timeout: 60s
+    middleware:
+      disable_tracing: false
+      disable_logging: false
+      disable_validate: true
+      disable_metadata: false
+
+data:
+  mysql:
+    master: drama:local-development-password@tcp(127.0.0.1:3307)/drama?parseTime=true&loc=UTC
+    max_open_conns: 20
+    max_idle_conns: 10
+    conn_max_lifetime: 1800s
+    conn_max_idle_time: 600s
+    slow_threshold: 0.2s
+    log_level: warn
+
+  # 运营统计独立维护连接地址与凭据；master 必填，并访问业务数据所在的同一逻辑库。
+  # 统计初始化仍需按模板准备分表，账号须具备相应权限。
+  reporting_mysql:
+    master: drama:local-development-password@tcp(127.0.0.1:3307)/drama?parseTime=true&loc=UTC
+    max_open_conns: 10
+    max_idle_conns: 5
+    conn_max_lifetime: 1800s
+    conn_max_idle_time: 600s
+    slow_threshold: 0.2s
+    log_level: warn
+
+  # Redis 仅保存可重建缓存；全局配置和推荐配置以 MySQL 为准。
+  redis:
+    mode: standalone
+    addrs: ["127.0.0.1:6379"]
+    db: 0
+
+business:
+  # 消费者 VisitorToken 有效期为 24 小时；重启后仅对新签发凭据生效。
+  visitor_token_ttl_seconds: 86400
+  # 广告日志按单实例、应用和用户限流，不影响统计计数。
+  ad_error_requests_per_minute: 6
+  # 直连播放 Token 有效期，60～900 秒；修改后重启服务生效。
+  direct_playback_token_ttl_seconds: 300
+  identity_token_encryption_secret: local-development-identity-token-encryption-secret
+  # 管理员 JWT 独立签名密钥；部署时替换为随机值，禁止复用消费者密钥。
+  admin_jwt_signing_secret: local-development-admin-jwt-signing-secret
+
+otel:
+  endpoint: ""
+  protocol: grpc
+  insecure: true
+  timeout: 3s
+  trace:
+    enabled: true
+    sampler: parentbased_traceidratio
+    sample_rate: 1
+  metric:
+    enabled: false
+  log:
+    enabled: false
+    level: info
+    console: true
+    # 文件输出独立于 OTel 远程导出，配置只从本文件读取。
+    file:
+      directory: /tmp/drama-server/dev
+      prefix: drama-server
+      rotation: day
+      retention_days: 14
+  retry:
+    enabled: false

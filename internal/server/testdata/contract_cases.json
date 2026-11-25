@@ -1,0 +1,27 @@
+[
+  {
+    "name": "健康检查",
+    "method": "GET",
+    "path": "/api/v1/health"
+  },
+  {
+    "name": "消费者预检",
+    "method": "OPTIONS",
+    "path": "/api/v1/home"
+  },
+  {
+    "name": "未认证后台请求",
+    "method": "GET",
+    "path": "/admin/v1/dramas"
+  },
+  {
+    "name": "未配置 VOD 回调时不挂载",
+    "method": "POST",
+    "path": "/callbacks/v1/byteplus/vod"
+  },
+  {
+    "name": "未知路由",
+    "method": "GET",
+    "path": "/unknown"
+  }
+]

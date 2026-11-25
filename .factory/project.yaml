@@ -1,0 +1,23 @@
+factory_version: "0.5"
+project:
+  id: drama-server
+  product: Drama TikTok Minis
+  kind: Go consumer operations and platform API
+context:
+  current_state: CONTEXT.md
+  instructions: AGENTS.md
+orchestration:
+  workspace: ../.factory/workspace.yaml
+commands:
+  test: make test
+  build: make build
+  verify: make verify
+risk:
+  public_api: true
+  data_migrations: true
+  production_data: true
+  external_side_effects: true
+authority:
+  local_changes: allowed
+  external_writes: confirmation_required
+  production_release: confirmation_required

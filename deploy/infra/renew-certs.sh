@@ -2,6 +2,7 @@
 # 签发或续期 api、admin 的 Let's Encrypt 证书。
 #   首次（网关未启动、80 端口空闲）：bash renew-certs.sh issue
 #   日常续期（网关运行中，走 webroot）：bash renew-certs.sh   —— 由 systemd 定时器每天执行
+# img/vod（cdn.zikodrama-tv.com）证书走 DNS 手动验证并上传到 BytePlus，不在这里自动续期，到期前约 30 天需重新签发。
 set -Eeuo pipefail
 cd "$(dirname "$0")"
 mkdir -p acme
@@ -11,6 +12,6 @@ if [ "${1:-renew}" = issue ]; then
     --cert-name api.zikodrama-tv.com -d api.zikodrama-tv.com -d admin.zikodrama-tv.com
 else
   docker run --rm -v /etc/letsencrypt:/etc/letsencrypt -v "$PWD/acme:/var/www/acme" certbot/certbot:v3.0.1 \
-    renew --non-interactive --webroot -w /var/www/acme
+    renew --non-interactive --cert-name api.zikodrama-tv.com --webroot -w /var/www/acme
   docker exec tkdrama-gateway nginx -s reload
 fi

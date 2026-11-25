@@ -11,7 +11,7 @@
 | vod.zikodrama-tv.com | 视频播放 CDN | BytePlus VOD 给的 CNAME |
 | img.zikodrama-tv.com | 封面图片 CDN | BytePlus VOD 给的 CNAME |
 
-证书：申请一张 `*.zikodrama-tv.com` 通配符证书，放到服务器 `~/tkdrama/drama-server/deploy/infra/certs/` 下的 `fullchain.pem` 和 `privkey.pem`。vod、img 两个 CDN 域名的证书在 BytePlus 控制台上传同一张。
+证书：在服务器用 Let's Encrypt 签发 api、admin 双域名证书（`deploy/infra/renew-certs.sh issue`），systemd 定时器每天执行 `renew-certs.sh` 自动续期。vod、img 的证书由 BytePlus 管理。
 
 ## 二、要买或开通的东西
 
@@ -38,7 +38,7 @@ git clone <drama-admin 仓库> ~/tkdrama/drama-admin
 # 基础设施配置在 drama-server 仓库的 deploy/infra 下
 cd ~/tkdrama/drama-server/deploy/infra
 cp .env.example .env    # 填三个密码，各用 openssl rand -hex 24 生成
-mkdir -p certs acme     # 放入 fullchain.pem、privkey.pem
+bash renew-certs.sh issue   # 首次签发证书（网关启动前，80 端口空闲时执行）
 docker compose up -d mysql redis
 ```
 

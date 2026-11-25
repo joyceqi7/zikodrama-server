@@ -18,7 +18,7 @@ var publicCampaignCoverKey = regexp.MustCompile("^[A-Za-z0-9][A-Za-z0-9._~/-]{0,
 // campaignCoverKey 只从自有公开图片 CDN 取路径，不把短时签名或其他域写入持久深链。
 func campaignCoverKey(coverURL string) string {
 	cover, err := url.Parse(strings.TrimSpace(coverURL))
-	if err != nil || cover.Scheme != "https" || cover.Host != "img.tkdrama.site" || cover.User != nil ||
+	if err != nil || cover.Scheme != "https" || cover.Host != "img.zikodrama-tv.com" || cover.User != nil ||
 		cover.RawQuery != "" || cover.ForceQuery || cover.Fragment != "" || cover.RawPath != "" {
 		return ""
 	}

@@ -146,7 +146,7 @@ func TestCampaignCoverPreviewUsesPublishedTarget(t *testing.T) {
 	store := memory.NewStore(memory.Seed{
 		PublishedOwnerID: appID,
 		Applications:     []application.Application{{Name: "Test", TikTokAppID: appID, ClientKey: "client-id", Status: application.StatusActive}},
-		Dramas: []domain.Drama{{ID: "5008", Title: "Published drama", CoverURL: "https://img.tkdrama.site/" + coverKey,
+		Dramas: []domain.Drama{{ID: "5008", Title: "Published drama", CoverURL: "https://img.zikodrama-tv.com/" + coverKey,
 			PublishStatus: "published", Episodes: []domain.Episode{{ID: "5014", DramaID: "5008", Number: 1}}}},
 	})
 	service := operations.NewService(memory.OperationsRepositories(store), nil)

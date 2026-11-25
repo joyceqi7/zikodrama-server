@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package styx.config.v1;
+
+option go_package = "gitee.com/linpbin/styx/api/config/v1;configv1";
+
+// LogFileConfig 定义 JSON 行日志文件的目录、名称、UTC 切割粒度和保留时间。
+message LogFileConfig {
+    // directory 是日志目录；相对路径以进程工作目录为基准。
+    string directory = 1;
+    // prefix 是安全文件名前缀，只允许字母、数字、连字符和下划线。
+    string prefix = 2;
+    // rotation 是 day 或 hour。
+    string rotation = 3;
+    // retention_days 是正整数，表示文件保留天数。
+    int32 retention_days = 4;
+}

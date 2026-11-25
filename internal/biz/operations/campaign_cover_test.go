@@ -12,7 +12,7 @@ func TestCampaignMinisPathUsesOfficialIDsAsDisplayHints(t *testing.T) {
 	t.Parallel()
 	c := campaign.Campaign{Code: "test-campaign", DramaID: "663", EpisodeID: "18426"}
 	drama := &content.Drama{
-		Title: "Published drama", CoverURL: "https://img.tkdrama.site/covers/drama.jpg", PlatformAlbumID: "album-1",
+		Title: "Published drama", CoverURL: "https://img.zikodrama-tv.com/covers/drama.jpg", PlatformAlbumID: "album-1",
 		Episodes: []content.Episode{
 			{ID: "18425", Number: 1, PlatformEpisodeID: "episode-1"},
 			{ID: "18426", Number: 2, PlatformEpisodeID: "episode-2"},

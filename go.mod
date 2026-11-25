@@ -139,3 +139,5 @@ require (
 	gorm.io/driver/postgres v1.5.11 // indirect
 	gorm.io/plugin/opentelemetry v0.1.16 // indirect
 )
+
+replace gitee.com/linpbin/styx => ./third_party/styx

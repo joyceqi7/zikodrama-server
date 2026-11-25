@@ -1,0 +1,227 @@
+syntax = "proto3";
+package styx.config.v1;
+
+option go_package = "gitee.com/linpbin/styx/api/config/v1;configv1";
+
+import "google/protobuf/duration.proto";
+
+// MySQLConfig MySQL 配置
+message MySQLConfig {
+    string master = 1;                                // 主库 DSN (必填)
+    repeated string slaves = 2;                       // 从库 DSN 列表 (可选，配置后自动读写分离)
+    int32 max_idle_conns = 3;                         // 最大空闲连接数 (默认 10)
+    int32 max_open_conns = 4;                         // 最大打开连接数 (默认 100)
+    google.protobuf.Duration conn_max_lifetime = 5;   // 连接最大生存时间 (默认 1h)
+    google.protobuf.Duration conn_max_idle_time = 6;  // 空闲连接最大生存时间 (默认 10m)
+    google.protobuf.Duration slow_threshold = 7;      // 慢查询阈值 (默认 200ms)
+    string log_level = 8;                             // 日志级别: silent, error, warn, info (默认 warn)
+}
+
+// RedisConfig Redis 配置
+message RedisConfig {
+    // 基础配置
+    string mode = 1;                                  // 模式: standalone/sentinel/cluster (默认 standalone)
+    repeated string addrs = 2;                        // 地址列表 (必填)
+    string username = 3;                              // 用户名
+    string password = 4;                              // 密码
+    int32 db = 5;                                     // 数据库索引 (cluster 模式不支持)
+
+    // Sentinel 模式配置
+    string master_name = 6;                           // 主节点名称 (sentinel 模式必填)
+    string sentinel_username = 7;                     // 哨兵用户名
+    string sentinel_password = 8;                     // 哨兵密码
+
+    // 超时配置
+    google.protobuf.Duration dial_timeout = 9;        // 连接超时 (默认 5s)
+    google.protobuf.Duration read_timeout = 10;       // 读超时 (默认 3s)
+    google.protobuf.Duration write_timeout = 11;      // 写超时 (默认 3s)
+
+    // 连接池配置
+    int32 pool_size = 13;                             // 连接池大小 (默认 10)
+    int32 min_idle_conns = 14;                        // 最小空闲连接数 (默认 3)
+    int32 max_idle_conns = 15;                        // 最大空闲连接数 (默认 10)
+    int32 max_active_conns = 16;                      // 最大活跃连接数 (默认无限制)
+    google.protobuf.Duration conn_max_lifetime = 17;  // 连接最大生存时间 (默认 1h)
+    google.protobuf.Duration conn_max_idle_time = 18; // 空闲连接最大生存时间 (默认 30m)
+
+    // Cluster 模式配置
+    bool read_only = 19;                              // 从副本读取 (仅 cluster 模式)
+    bool route_by_latency = 20;                       // 按延迟路由 (仅 cluster 模式)
+    bool route_randomly = 21;                         // 随机路由 (仅 cluster 模式)
+
+    // 可观测性配置
+    google.protobuf.Duration slow_threshold = 12;     // 慢查询阈值 (默认 100ms)
+    bool disable_tracing = 22;                        // 禁用链路追踪
+    bool disable_metrics = 23;                        // 禁用指标收集
+    bool disable_identity = 25;                       // 禁用 CLIENT SETINFO 身份上报
+
+    // TLS 配置
+    RedisTLSConfig tls = 24;                          // TLS 配置
+}
+
+// RedisTLSConfig Redis TLS 配置
+message RedisTLSConfig {
+    bool enabled = 1;                                 // 是否启用 TLS
+    string cert_file = 2;                             // 客户端证书文件路径
+    string key_file = 3;                              // 客户端私钥文件路径
+    string ca_file = 4;                               // CA 证书文件路径
+    bool insecure_skip_verify = 5;                    // 跳过证书验证 (不推荐生产使用)
+    string server_name = 6;                           // 服务器名称 (SNI)
+}
+
+// MongoConfig MongoDB 配置
+message MongoConfig {
+    string uri = 1;                                   // 连接 URI (必填)
+    string database = 2;                              // 数据库名称 (必填)
+
+    // 连接池配置
+    int32 min_pool_size = 3;                          // 最小连接数 (默认 5)
+    int32 max_pool_size = 4;                          // 最大连接数 (默认 100)
+    google.protobuf.Duration max_conn_idle_time = 5;  // 连接最大空闲时间 (默认 10m)
+
+    // 超时配置
+    google.protobuf.Duration connect_timeout = 6;     // 连接超时 (默认 10s)
+    google.protobuf.Duration server_timeout = 7;      // 服务器选择超时 (默认 30s)
+
+    // 读取偏好: primary, primaryPreferred, secondary, secondaryPreferred, nearest (默认 primary)
+    string read_preference = 8;
+
+    // 可观测性配置
+    bool disable_tracing = 9;                         // 禁用链路追踪
+    bool disable_metrics = 10;                        // 禁用指标收集
+}
+
+// ElasticsearchConfig Elasticsearch 配置
+message ElasticsearchConfig {
+    reserved 9;
+    reserved "capture_search_body";
+
+    repeated string addresses = 1;                    // 服务器地址列表 (必填)
+    string username = 2;                              // 用户名
+    string password = 3;                              // 密码
+
+    // 重试配置
+    int32 max_retries = 4;                            // 最大重试次数 (默认 3)
+    repeated int32 retry_on_status = 5;               // 触发重试的 HTTP 状态码 (默认 502,503,504)
+
+    // 连接池配置
+    int32 max_idle_conns_per_host = 6;                // 每个主机的最大空闲连接数 (默认 10)
+    google.protobuf.Duration response_header_timeout = 7; // 响应头超时 (默认 30s)
+
+    // 可观测性配置
+    bool disable_tracing = 8;                         // 禁用链路追踪
+    // TLS 配置
+    ElasticsearchTLSConfig tls = 10;
+}
+
+// ElasticsearchTLSConfig Elasticsearch TLS 配置
+message ElasticsearchTLSConfig {
+    bool enabled = 1;                                 // 是否启用 TLS
+    string cert_file = 2;                             // 客户端证书文件路径
+    string key_file = 3;                              // 客户端私钥文件路径
+    string ca_file = 4;                               // CA 证书文件路径
+    bool insecure_skip_verify = 5;                    // 跳过证书验证 (不推荐生产使用)
+    string server_name = 6;                           // 服务器名称 (SNI)
+}
+
+// KafkaTLSConfig Kafka TLS 配置
+message KafkaTLSConfig {
+    bool enabled = 1;                                 // 是否启用 TLS
+    string cert_file = 2;                             // 客户端证书文件路径
+    string key_file = 3;                              // 客户端私钥文件路径
+    string ca_file = 4;                               // CA 证书文件路径
+    bool insecure_skip_verify = 5;                    // 跳过证书验证 (不推荐生产使用)
+    string server_name = 6;                           // 服务器名称 (SNI)
+}
+
+// KafkaProducerConfig Kafka 生产者配置
+enum KafkaRequiredAcks {
+    KAFKA_REQUIRED_ACKS_ALL = 0;                     // 所有同步副本确认（默认）
+    KAFKA_REQUIRED_ACKS_NONE = 1;                    // 不等待确认
+    KAFKA_REQUIRED_ACKS_LEADER = 2;                  // 仅 leader 确认
+}
+
+message KafkaProducerConfig {
+    repeated string brokers = 1;                      // Broker 地址列表 (必填)
+    int32 max_message_bytes = 2;                      // 最大消息字节数 (默认 1MB)
+    google.protobuf.Duration flush_frequency = 3;    // 刷新间隔
+    google.protobuf.Duration timeout = 4;            // 发送超时 (默认 10s)
+    int32 retry_max = 5;                              // 最大重试次数 (默认 3)
+    KafkaRequiredAcks required_acks = 6;              // 确认级别（默认所有同步副本）
+    string compression = 7;                           // 压缩方式: none, gzip, snappy, lz4, zstd (默认 snappy)
+
+    // SASL 认证
+    bool sasl_enabled = 8;                            // 是否启用 SASL
+    string sasl_mechanism = 9;                        // SASL 机制: PLAIN, SCRAM-SHA-256, SCRAM-SHA-512
+    string sasl_user = 10;                            // SASL 用户名
+    string sasl_password = 11;                        // SASL 密码
+
+    // TLS 配置
+    KafkaTLSConfig tls = 12;
+
+    reserved 13;
+}
+
+// KafkaConsumerConfig Kafka 消费者配置
+message KafkaConsumerConfig {
+    repeated string brokers = 1;                      // Broker 地址列表 (必填)
+    string group_id = 2;                              // 消费者组 ID (必填)
+    repeated string topics = 3;                       // 消费主题列表
+    int64 initial_offset = 4;                         // 初始偏移量: -1=最新, -2=最旧 (默认 -1)
+    google.protobuf.Duration session_timeout = 5;    // 会话超时 (默认 10s)
+    google.protobuf.Duration heartbeat_interval = 6; // 心跳间隔 (默认 3s)
+    google.protobuf.Duration rebalance_timeout = 7;  // 再平衡超时 (默认 60s)
+    google.protobuf.Duration fetch_max_wait = 8;     // 单次拉取最长等待时间 (默认 100ms)
+    int32 fetch_min_bytes = 9;                       // 单次拉取最小字节数 (默认 1B)
+    int32 fetch_max_bytes = 10;                      // 最大拉取字节数 (默认 10MB)
+
+    // SASL 认证
+    bool sasl_enabled = 11;                           // 是否启用 SASL
+    string sasl_mechanism = 12;                       // SASL 机制: PLAIN, SCRAM-SHA-256, SCRAM-SHA-512
+    string sasl_user = 13;                            // SASL 用户名
+    string sasl_password = 14;                        // SASL 密码
+
+    // TLS 配置
+    KafkaTLSConfig tls = 15;
+
+    reserved 16;
+}
+
+// RocketMQConfig RocketMQ 5.x 配置
+message RocketMQConfig {
+    string endpoint = 1;                              // gRPC 代理端点，例如 "localhost:8081"
+    string namespace = 2;                             // 可选的命名空间
+    repeated string topics = 3;                       // 生产者主题
+    string access_key = 4;
+    string secret_key = 5;
+    int32 max_attempts = 6;                           // 最大尝试次数 (默认 3)
+    // 消费者设置（供业务方创建消费者时使用）
+    string consumer_group = 7;
+    google.protobuf.Duration await_duration = 8;     // 消费者等待时间 (默认 20s)
+}
+
+// RocketMQConsumerConfig RocketMQ 5.x 消费者配置
+message RocketMQConsumerConfig {
+    string endpoint = 1;                              // gRPC 代理端点 (必填)
+    string namespace = 2;                             // 命名空间
+    string consumer_group = 3;                        // 消费者组 (必填)
+    string topic = 4;                                 // 消费主题 (必填，单个)
+    string filter_expression = 5;                     // Tag 过滤表达式，空或 "*" 表示全部
+    string access_key = 6;
+    string secret_key = 7;
+    google.protobuf.Duration await_duration = 8;      // 长轮询等待时间 (默认 20s)
+    int32 max_cache_message_count = 9;                // 本地缓存消息数 (默认 64)
+    int32 max_cache_message_size_in_bytes = 10;       // 本地缓存消息大小 (字节)
+    reserved 11;
+}
+
+message DataConfig {
+    map<string, MySQLConfig> mysql = 1;
+    map<string, RedisConfig> redis = 2;
+    map<string, MongoConfig> mongo = 3;
+    map<string, ElasticsearchConfig> elasticsearch = 4;
+    map<string, KafkaProducerConfig> kafka_producer = 5;
+    map<string, KafkaConsumerConfig> kafka_consumer = 6;
+    map<string, RocketMQConfig> rocketmq = 7;
+    map<string, RocketMQConsumerConfig> rocketmq_consumer = 8;
+}

@@ -1,0 +1,39 @@
+syntax = "proto3";
+package styx.config.v1;
+
+option go_package = "gitee.com/linpbin/styx/api/config/v1;configv1";
+
+import "google/protobuf/duration.proto";
+
+// NacosCacheStartMode 表达启动阶段是否加载本地缓存，避免 Proto3 bool 无法区分未配置与 false。
+enum NacosCacheStartMode {
+    NACOS_CACHE_START_MODE_UNSPECIFIED = 0;      // 未配置时默认跳过缓存
+    NACOS_CACHE_START_MODE_SKIP = 1;             // 跳过本地缓存
+    NACOS_CACHE_START_MODE_LOAD = 2;             // 显式加载本地缓存
+}
+
+// NacosServerConfig Nacos 服务端地址
+message NacosServerConfig {
+    string ip_addr = 1;                          // Nacos 地址 (必填)
+    uint32 port = 2;                             // Nacos 端口 (默认 8848)
+    string scheme = 3;                           // http/https (默认 http)
+    uint32 grpc_port = 4;                        // gRPC 端口 (默认 port+1000)
+}
+
+// NacosConfig Nacos 配置 (基于 nacos-sdk-go/v2)
+message NacosConfig {
+    repeated NacosServerConfig servers = 1;
+    string namespace_id = 2;                     // 命名空间 (public 填空)
+    google.protobuf.Duration timeout = 3;        // 超时时间 (默认 5s)
+    string username = 4;                         // 认证用户名
+    string password = 5;                         // 认证密码
+    string log_dir = 6;                          // 日志目录
+    string cache_dir = 7;                        // 缓存目录
+    string log_level = 8;                        // 日志级别 (默认 warn)
+    NacosCacheStartMode cache_start_mode = 9;    // 启动缓存策略 (默认跳过缓存)
+    string access_key = 10;
+    string secret_key = 11;
+    string group = 20;                           // 服务分组 (默认 DEFAULT_GROUP)
+    string cluster = 21;                         // 集群名称 (默认 DEFAULT)
+    double weight = 22;                          // 服务权重 (默认 100)
+}

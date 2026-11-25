@@ -1,0 +1,4 @@
+{
+  "invalid_request": "Request is invalid",
+  "unauthorized": "Authentication is required"
+}

@@ -14,3 +14,4 @@ var/
 .factory/*
 !.factory/project.yaml
 /server
+!deploy/infra/.env.example

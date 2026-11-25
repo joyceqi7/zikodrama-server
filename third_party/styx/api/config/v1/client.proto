@@ -1,0 +1,50 @@
+syntax = "proto3";
+package styx.config.v1;
+
+option go_package = "gitee.com/linpbin/styx/api/config/v1;configv1";
+
+import "google/protobuf/duration.proto";
+import "api/config/v1/server.proto";
+
+// ClientMiddlewareConfig 客户端中间件配置
+message ClientMiddlewareConfig {
+    bool disable_tracing = 1;                    // 禁用链路追踪
+    bool enable_circuitbreaker = 2;              // 启用熔断器 (默认禁用)
+    bool disable_metadata = 3;                   // 禁用 metadata 传递
+    CircuitBreakerConfig circuitbreaker = 10;
+}
+
+// CircuitBreakerConfig 熔断器配置 (Google SRE Breaker 算法)
+message CircuitBreakerConfig {
+    double success_threshold = 1;                // 成功率阈值 (默认 0.5)
+    int32 request_threshold = 2;                 // 最小请求数 (默认 100)
+    google.protobuf.Duration window = 3;         // 滚动窗口时长 (默认 3s)
+    int32 bucket = 4;                            // 窗口内桶数量 (默认 10)
+}
+
+// HTTPClientConfig HTTP 客户端配置
+message HTTPClientConfig {
+    string endpoint = 1;                         // 直连地址: http://127.0.0.1:8000
+    string discovery = 2;                        // 服务发现: user-service
+    google.protobuf.Duration timeout = 3;        // 请求超时 (默认 5s)
+    TLSConfig tls = 4;                           // TLS 配置 (可选)
+    int32 subset_size = 5;                       // 子集大小 (默认 25)
+    ClientMiddlewareConfig middleware = 10;
+    string user_agent = 20;                      // User-Agent 头
+    bool block = 21;                             // 阻塞模式初始化
+}
+
+// GRPCClientConfig gRPC 客户端配置
+message GRPCClientConfig {
+    string endpoint = 1;                         // 直连地址: 127.0.0.1:9000
+    string discovery = 2;                        // 服务发现: user-service
+    google.protobuf.Duration timeout = 3;        // 请求超时 (默认 5s)
+    TLSConfig tls = 4;                           // TLS 配置 (可选)
+    bool insecure = 5;                           // 显式允许明文连接 (默认关闭)
+    int32 subset_size = 6;                       // 子集大小 (默认 25)
+    string group = 7;                            // Nacos 分组覆盖 (跨组服务发现时使用)
+    ClientMiddlewareConfig middleware = 10;
+    bool health_check = 20;                      // 启用健康检查 (默认关闭)
+    int32 max_recv_msg_size = 21;                // 最大接收消息 (默认 4MB)
+    int32 max_send_msg_size = 22;                // 最大发送消息 (默认 4MB)
+}

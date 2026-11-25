@@ -20,9 +20,7 @@ func TestDeployRunsUpdatedScript(t *testing.T) {
 		want []string
 		omit []string
 	}{
-		{name: "使用配置文件和运维SSH文件构建", mode: "test", want: []string{"git <pull> <--ff-only> <origin> <test>", "docker <build> <--ssh> <default=", "deployment key> <--secret> <type=file,id=gitee_known_hosts,src=", "<--network> <bridge> <-p> <18080:18080>"}, omit: []string{"<--env> <DRAMA_LOG_", "<-print-log-directory>"}},
-		{name: "私钥缺失由Docker返回错误", mode: "test", env: []string{"DEPLOY_TEST_MISSING_KEY=1"}, fail: true, want: []string{"docker <build>"}, omit: []string{"docker <rm>"}},
-		{name: "主机文件缺失由Docker返回错误", mode: "test", env: []string{"DEPLOY_TEST_MISSING_HOSTS=1"}, fail: true, want: []string{"docker <build>"}, omit: []string{"docker <rm>"}},
+		{name: "使用配置文件构建且不传SSH凭据", mode: "test", want: []string{"git <pull> <--ff-only> <origin> <test>", "docker <build> <-t>", "<--network> <bridge> <-p> <18080:18080>"}, omit: []string{"<--ssh>", "<--secret>"}},
 		{name: "构建失败时保留原容器", mode: "test", env: []string{"DEPLOY_TEST_FAIL=build"}, fail: true, want: []string{"docker <build>"}, omit: []string{"docker <rm>", "docker <run>"}},
 		{name: "日志目录授权失败时保留原容器", mode: "test", env: []string{"DEPLOY_TEST_FAIL=log_prepare"}, fail: true, want: []string{"<--user> <root>", "<chown -R app /app/logs && chmod -R u+rwX /app/logs>"}, omit: []string{"docker <rm> <-f> <drama-server>"}},
 		{name: "日志环境变量不传入容器", mode: "test", env: []string{"DRAMA_LOG_DIRECTORY=/tmp/ignored", "DRAMA_LOG_ROTATION=week", "DRAMA_LOG_RETENTION_DAYS=0"}, omit: []string{"<--env> <DRAMA_LOG_", "dst=/tmp/ignored"}},
@@ -109,17 +107,17 @@ func TestDeployReloadsItselfAfterPull(t *testing.T) {
 	}
 }
 
-// TestDockerBuildUsesOperatorHostKey 确保下载和编译均消费部署传入的主机文件，不把公钥固化到镜像。
-func TestDockerBuildUsesOperatorHostKey(t *testing.T) {
+// TestDockerBuildUsesVendoredStyx 确保构建使用仓库内置的 Styx，不依赖 SSH 或私有仓库。
+func TestDockerBuildUsesVendoredStyx(t *testing.T) {
 	dockerfile, err := os.ReadFile("../Dockerfile")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if strings.Count(string(dockerfile), "--mount=type=secret,id=gitee_known_hosts,") != 2 || strings.Contains(string(dockerfile), "COPY deploy/gitee_known_hosts") {
-		t.Fatal("两个构建步骤必须临时读取运维提供的 known_hosts")
+	if strings.Contains(string(dockerfile), "--mount=type=ssh") || strings.Contains(string(dockerfile), "gitee") {
+		t.Fatal("构建不应再读取 SSH 凭据或 Gitee 私有仓库")
 	}
-	if _, err := os.Stat("../deploy/gitee_known_hosts"); !os.IsNotExist(err) {
-		t.Fatal("仓库不应保存 Gitee 主机公钥")
+	if !strings.Contains(string(dockerfile), "COPY third_party/styx ./third_party/styx") {
+		t.Fatal("下载依赖前必须先复制内置的 Styx 源码")
 	}
 }
 

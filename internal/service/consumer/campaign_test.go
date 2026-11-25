@@ -41,7 +41,7 @@ func TestCampaignTargetOverridesUntrustedLaunchTarget(t *testing.T) {
 		}},
 		Dramas: []domain.Drama{
 			{ID: "5012", Title: "Query", PublishStatus: "published", Episodes: []domain.Episode{{ID: "5018", DramaID: "5012", Number: 1}}},
-			{ID: "5011", Title: "Campaign", CoverURL: "https://img.tkdrama.site/covers/5011.jpg", PublishStatus: "published", Episodes: []domain.Episode{
+			{ID: "5011", Title: "Campaign", CoverURL: "https://img.zikodrama-tv.com/covers/5011.jpg", PublishStatus: "published", Episodes: []domain.Episode{
 				{ID: "5017", DramaID: "5011", Number: 1, VID: "private-media-id"},
 			}},
 		},
@@ -81,7 +81,7 @@ func TestCampaignTargetOverridesUntrustedLaunchTarget(t *testing.T) {
 		t.Fatal(err)
 	}
 	if got := preparation.Data; got == nil || got.Target != (domain.LaunchTarget{DramaID: "5011", EpisodeID: "5017"}) ||
-		got.EpisodeNumber != 1 || got.EpisodeCount != 1 || got.Title != "Campaign" || got.CoverURL != "https://img.tkdrama.site/covers/5011.jpg" {
+		got.EpisodeNumber != 1 || got.EpisodeCount != 1 || got.Title != "Campaign" || got.CoverURL != "https://img.zikodrama-tv.com/covers/5011.jpg" {
 		t.Fatalf("公开准备未使用可信投放目标: %+v", got)
 	}
 	for _, forbidden := range []string{"private-media-id", "visitorToken", "playAuthToken", "vipState", "entryAdStatus"} {

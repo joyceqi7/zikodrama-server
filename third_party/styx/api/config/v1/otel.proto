@@ -1,0 +1,59 @@
+syntax = "proto3";
+package styx.config.v1;
+
+option go_package = "gitee.com/linpbin/styx/api/config/v1;configv1";
+
+import "google/protobuf/duration.proto";
+import "api/config/v1/log_file.proto";
+
+// AppInfo contains application identification information for OTel resource attributes.
+message AppInfo {
+    string name = 1;         // Service name (service.name)
+    string version = 2;      // Service version (service.version)
+    string env = 3;          // Deployment environment (deployment.environment)
+    string namespace = 4;    // Service namespace (service.namespace)
+    string instance_id = 5;  // Service instance ID (service.instance.id)
+}
+
+// TraceConfig contains trace-specific configuration.
+message TraceConfig {
+    bool enabled = 1;        // 启用追踪；未配置 endpoint 时只在本地生成 Trace ID，不导出 Span
+    string sampler = 2;      // Sampler type: always_on, always_off, traceidratio, parentbased_always_on, parentbased_always_off, parentbased_traceidratio
+    double sample_rate = 3;  // Sample rate for ratio-based samplers (0.0 - 1.0)
+}
+
+// MetricConfig contains metric-specific configuration.
+message MetricConfig {
+    bool enabled = 1;                          // Enable metrics
+    google.protobuf.Duration interval = 2;     // Export interval
+}
+
+// LogConfig contains log-specific configuration.
+message LogConfig {
+    bool enabled = 1;                          // Enable OTel log export
+    string level = 2;                          // Log level: debug, info, warn, error (default: info)
+    bool console = 3;                          // Output to console (default: true)
+    LogFileConfig file = 4;                     // 可选的本地 JSON 文件输出及 UTC 时间切割
+}
+
+// RetryConfig contains retry configuration for exporter.
+message RetryConfig {
+    bool enabled = 1;                                   // Enable retry
+    google.protobuf.Duration initial_interval = 2;      // Initial retry interval
+    google.protobuf.Duration max_interval = 3;          // Maximum retry interval
+    google.protobuf.Duration max_elapsed_time = 4;      // Maximum total retry time
+}
+
+// OTelConfig contains OpenTelemetry collector configuration.
+message OTelConfig {
+    string endpoint = 1;                       // Collector endpoint (e.g., localhost:4317)
+    string protocol = 2;                       // Protocol: grpc, http
+    bool insecure = 3;                         // Use insecure connection (no TLS)
+    google.protobuf.Duration timeout = 4;      // Export timeout
+    map<string, string> headers = 5;           // Custom headers for exporter
+    string compression = 6;                    // Compression: none, gzip
+    TraceConfig trace = 10;                    // Trace configuration
+    MetricConfig metric = 11;                  // Metric configuration
+    LogConfig log = 12;                        // Log configuration
+    RetryConfig retry = 13;                    // Retry configuration
+}

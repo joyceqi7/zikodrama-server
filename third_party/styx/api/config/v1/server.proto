@@ -1,0 +1,49 @@
+syntax = "proto3";
+package styx.config.v1;
+
+option go_package = "gitee.com/linpbin/styx/api/config/v1;configv1";
+
+import "google/protobuf/duration.proto";
+
+// TLSConfig TLS 配置
+message TLSConfig {
+    string cert_file = 1;    // 证书文件路径
+    string key_file = 2;     // 私钥文件路径
+    string ca_file = 3;      // CA 证书 (双向 TLS)
+}
+
+// MiddlewareConfig 服务端中间件配置
+// 注意: Recovery 中间件始终启用，不可禁用
+message MiddlewareConfig {
+    reserved 1;                      // disable_recovery 已移除，Recovery 始终启用
+    bool disable_tracing = 2;        // 禁用链路追踪
+    bool disable_logging = 3;        // 禁用请求日志
+    bool disable_validate = 4;       // 禁用参数校验
+    bool disable_metadata = 5;       // 禁用 metadata 传递
+}
+
+// HTTPServerConfig HTTP 服务器配置
+message HTTPServerConfig {
+    string addr = 1;                         // 监听地址: :8000 (必填)
+    string network = 2;                      // 网络类型: tcp (默认)
+    google.protobuf.Duration timeout = 3;    // 请求超时 (默认 10s)
+    string endpoint = 5;                     // 外部访问地址 (服务注册用)
+    TLSConfig tls = 6;                       // TLS 配置 (可选)
+    string path_prefix = 7;                  // 路径前缀 (可选)
+    reserved 8;
+    reserved "trusted_proxies";
+    MiddlewareConfig middleware = 10;
+}
+
+// GRPCServerConfig gRPC 服务器配置
+message GRPCServerConfig {
+    string addr = 1;                         // 监听地址: :9000 (必填)
+    string network = 2;                      // 网络类型: tcp (默认)
+    google.protobuf.Duration timeout = 3;    // 请求超时 (默认 10s)
+    string endpoint = 5;                     // 外部访问地址 (服务注册用)
+    TLSConfig tls = 6;                       // TLS 配置 (可选)
+    int32 max_recv_msg_size = 7;             // 最大接收消息大小 (默认 4MB)
+    int32 max_send_msg_size = 8;             // 最大发送消息大小 (默认 4MB)
+    bool enable_reflection = 9;              // 显式启用 gRPC 反射 (默认关闭)
+    MiddlewareConfig middleware = 10;
+}

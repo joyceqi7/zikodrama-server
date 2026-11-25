@@ -28,18 +28,13 @@ deploy_main() {
 
   local app_name=drama-server
   local config_file="$project_root/configs/config.$deploy_environment.yaml"
-  # SSH 环境由运维配置，直接交给 Docker 使用，由构建命令返回实际错误。
-  local ssh_key_file="${DEPLOY_SSH_KEY:-$HOME/.ssh/id_rsa}"
-  local known_hosts_file="${DEPLOY_KNOWN_HOSTS_FILE:-$HOME/.ssh/known_hosts}"
   local version image_tag
   version="$(git rev-parse --short HEAD)"
   image_tag="$app_name:$deploy_environment-$version"
   echo ">>> 镜像: $image_tag"
   echo ">>> 构建镜像..."
-  # 显式传入文件类型，保证与 Dockerfile 所需的 secret 名称一致。
+  # Styx 已随仓库内置，构建不需要 SSH 凭据。
   DOCKER_BUILDKIT=1 docker build \
-    --ssh "default=$ssh_key_file" \
-    --secret "type=file,id=gitee_known_hosts,src=$known_hosts_file" \
     -t "$image_tag" \
     -t "$app_name:$deploy_environment-latest" \
     .

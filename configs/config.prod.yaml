@@ -1,7 +1,7 @@
 app:
   # 服务名称，对应遥测资源的 service.name。
   name: drama-server
-  # 测试构建的版本标签。
+  # 版本标签。
   version: "1.0"
   # 运行环境；media 可从全局配置表加载，test 不启用生产级身份密钥门禁。
   env: production
@@ -17,12 +17,10 @@ server:
 
 # 共享持久化配置；运行服务仍需可连接的 MySQL，不回退到内存仓储。
 data:
-  # 测试 ECS 的 MySQL 公网地址。
-  # 仅供 Mac 本机调试测试环境使用。
+  # 同机 MySQL（deploy/infra/docker-compose.yml），只监听 127.0.0.1；生产容器使用 host 网络。
+  # 启动前按 sql/README.md 在空库执行 init.sql 和全部 migrations。
   mysql:
-    # 保留项目库名；服务器目前尚未创建 drama_test，启动前需单独部署 Schema。
-    # MySQL 使用 TLS 加密，测试环境暂不验证自签名证书；不得用于生产。
-    master: "user:pass@tcp(ip:port)/drama_test?parseTime=true&loc=UTC&tls=skip-verify"
+    master: "drama:CHANGE_ME_MYSQL_PASSWORD@tcp(127.0.0.1:3306)/tk_drama?parseTime=true&loc=UTC"
     max_open_conns: 100
     max_idle_conns: 40
     conn_max_lifetime: 1800s
@@ -32,21 +30,20 @@ data:
   # 运营统计独立维护连接地址与凭据；master 必填，并访问业务数据所在的同一逻辑库。
   # 仪表盘汇总刷新需要写权限；该池不用于 Mini 登录、播放、奖励或埋点写入。
   reporting_mysql:
-    master: "user:pass@tcp(ip:port)/drama_test?parseTime=true&loc=UTC&tls=skip-verify"
+    master: "drama:CHANGE_ME_MYSQL_PASSWORD@tcp(127.0.0.1:3306)/tk_drama?parseTime=true&loc=UTC"
     max_open_conns: 10
     max_idle_conns: 5
     conn_max_lifetime: 1800s
     conn_max_idle_time: 600s
     slow_threshold: 0.2s
     log_level: warn
-  # 测试 ECS 的 Redis 公网地址；使用密码认证，当前未配置 TLS。
-  # 全局配置的权威存储，部署需开启持久化并禁止淘汰配置。
+  # 同机 Redis，只监听 127.0.0.1，开启 AOF 持久化并禁止淘汰（UID 发号进度存在这里）。
   redis:
     mode: standalone
     addrs:
-      - "ip:port"
+      - "127.0.0.1:6379"
     username: default
-    password: "pass"
+    password: "CHANGE_ME_REDIS_PASSWORD"
     db: 0
     pool_size: 100
     min_idle_conns: 30
@@ -67,9 +64,9 @@ business:
   ad_error_requests_per_minute: 6
   # 直连播放 Token 有效期，60～900 秒；修改后重启服务生效。
   direct_playback_token_ttl_seconds: 300
-  # 消费者 VisitorToken 加密根密钥，仅用于消费者认证。
+  # 消费者 VisitorToken 加密根密钥，仅用于消费者认证；在服务器上用 openssl rand -hex 32 生成。
   identity_token_encryption_secret: ""
-  # 管理员 JWT 独立签名密钥；部署时替换为随机值，禁止复用消费者密钥。
+  # 管理员 JWT 独立签名密钥；另用 openssl rand -hex 32 生成，禁止与上一项相同。
   admin_jwt_signing_secret: ""
   # BytePlus VOD 配置存入 MySQL global_configs 的 media 记录；Redis 只做缓存。
 

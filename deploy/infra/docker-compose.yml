@@ -63,6 +63,7 @@ services:
       - ./gateway/proxy_params.inc:/etc/nginx/conf.d/proxy_params.inc:ro
       - /etc/letsencrypt:/etc/letsencrypt:ro
       - ./acme:/var/www/acme:ro
+      - ./legal:/usr/share/nginx/legal:ro
 
 volumes:
   mysql-data:

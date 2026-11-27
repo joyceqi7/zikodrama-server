@@ -64,6 +64,7 @@ services:
       - /etc/letsencrypt:/etc/letsencrypt:ro
       - ./acme:/var/www/acme:ro
       - ./legal:/usr/share/nginx/legal:ro
+      - ./legal-zikoshorts:/usr/share/nginx/legal-zikoshorts:ro
 
 volumes:
   mysql-data:
